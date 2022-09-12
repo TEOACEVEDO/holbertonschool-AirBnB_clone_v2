@@ -7,7 +7,7 @@ to your web servers, using the function deploy
 from fabric.api import env, local, put, run
 from datetime import datetime
 from os.path import exists, isdir
-env.hosts = ['3.91.84.106', '3.80.230.115']
+env.hosts = ['3.90.180.30', '18.206.165.178']
 
 
 def do_pack():
