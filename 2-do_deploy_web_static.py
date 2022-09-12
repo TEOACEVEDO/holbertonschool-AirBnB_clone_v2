@@ -1,33 +1,46 @@
 #!/usr/bin/python3
-""" Write a Fabric script that generates a .tgz archive from the contents of
-the web_static folder of your AirBnB Clone repo, using the function do_pack."""
-
+"""creates and distributes an archive to your web servers,
+using the function deploy
+"""
 from fabric.api import *
 from datetime import datetime
-from os import path
-
+import os
 
 env.hosts = ['3.90.180.30', '18.206.165.178']
 
 
+def do_pack():
+    """return the archive path if the archive has been correctly generated.
+    Otherwise, it should return None
+    """
+    local("mkdir -p versions")
+    date = datetime.strftime(datetime.now(), '%Y%m%d%H%M%S')
+    file = local("tar -cvzf versions/web_static_{}.tgz web_static"
+                 .format(datetime.strftime(datetime.now(), '%Y%m%d%H%M%S')))
+    if file.failed:
+        return None
+    return ("versions/web_static_{}.tgz".format(date))
+
+
 def do_deploy(archive_path):
-    """ Deploy the file in specific folders in the servers """
-    if path.isfile(archive_path) is False:
+    """Returns True if all operations have been done correctly,
+    otherwise returns False
+    """
+    if not os.path.exists(archive_path):
         return False
-    filetgz = archive_path.split("/")[-1]
-    filename = filetgz.replace('.tgz', '')
-
-    newdir = "/data/web_static/releases/" + filename
-
     try:
         put(archive_path, "/tmp/")
-        run("mkdir {}/".format(newdir))
-        run("tar -xzf /tmp/{} -C {}/".format(filetgz, newdir))
-        run("rm /tmp/{}".format(filetgz))
-        run("mv {}/web_static/* {}/".format(newdir, newdir))
-        run("rm -rf {}/web_static".format(newdir))
-        run("rm -rf /data/web_static/current")
-        run("ln -s {} /data/web_static/current".format(newdir))
+        file = archive_path.split('/')[-1].split('.')[0]
+        sudo("mkdir -p /data/web_static/releases/{}/".format(file))
+        sudo("tar -xzf /tmp/{}.tgz -C /data/web_static/releases/{}/"
+             .format(file, file))
+        sudo("rm /tmp/{}.tgz".format(file))
+        sudo("mv /data/web_static/releases/{}/web_static/*\
+        /data/web_static/releases/{}/".format(file, file))
+        sudo("rm -rf /data/web_static/releases/{}/web_static".format(file))
+        sudo("rm -rf /data/web_static/current")
+        sudo("ln -s /data/web_static/releases/{}/ /data/web_static/current"
+             .format(file))
         return True
-    except:
+    except Exception:
         return False
