@@ -21,7 +21,8 @@ if getenv("HBNB_TYPE_STORAGE") == "db":
                                  nullable=False))
 
 
-class Place(BaseModel, Base if (getenv("HBNB_TYPE_STORAGE")=="db") else object):
+class Place(BaseModel,
+            Base if (getenv("HBNB_TYPE_STORAGE") == "db") else object):
     """ A place to stay"""
 
     if getenv("HBNB_TYPE_STORAGE") == "db":
